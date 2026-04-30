@@ -1,7 +1,7 @@
 /**
  * HSKB ERP Data Connector v2
  * GitHub Pages + GitHub REST API 기반 데이터 연동
- * DataService._store에 실제 데이터 자동 주입
+ * window.DataService._store에 실제 데이터 자동 주입
  */
 
 const HSKB_DATA = {
@@ -30,7 +30,7 @@ const HSKB_DATA = {
       if (cResp.ok) {
         const customers = await cResp.json();
         if (typeof DataService !== 'undefined') {
-          DataService._store.customers = customers;
+          window.DataService._store.customers = customers;
           console.log('[HSKB] 고객 ' + customers.length + '명 DataService 주입 완료');
           window.dispatchEvent(new CustomEvent('hskb:customers:loaded', { detail: { customers } }));
         }
@@ -72,14 +72,14 @@ const HSKB_DATA = {
               ticket: s.ticket || ''
             });
           });
-          DataService._store.sales = salesMap;
-          DataService._store.salesAllRecords = allSales;
+          window.DataService._store.sales = salesMap;
+          window.DataService._store.salesAllRecords = allSales;
           // contracts.json 로드
           try {
             const contractsResp = await fetch(BASE_URL + 'data/contracts.json?t=' + Date.now());
             if (contractsResp.ok) {
               const contracts = await contractsResp.json();
-              DataService._store.contracts = contracts;
+              window.DataService._store.contracts = contracts;
               console.log('[HSKB] contracts.json 로드:', contracts.length, '건');
             }
           } catch(e) { console.warn('[HSKB] contracts.json 로드 실패:', e); }
@@ -89,7 +89,7 @@ const HSKB_DATA = {
             const masterResp = await fetch(BASE_URL + 'data/master.json?t=' + Date.now());
             if (masterResp.ok) {
               const master = await masterResp.json();
-              DataService._store.master = master;
+              window.DataService._store.master = master;
               window._MASTER_DATA = master; // ERP_COMMON.js fallback용
               console.log('[HSKB] master.json 로드 완료:', Object.keys(master).join(', '));
             }
@@ -100,14 +100,14 @@ const HSKB_DATA = {
             const salaryResp = await fetch(BASE_URL + 'data/salary_2026_03.json?t=' + Date.now());
             if (salaryResp.ok) {
               const salary = await salaryResp.json();
-              DataService._store.salary = salary;
-              DataService._store.salaryByMonth = { '2026-03': salary };
+              window.DataService._store.salary = salary;
+              window.DataService._store.salaryByMonth = { '2026-03': salary };
               console.log('[HSKB] salary_2026_03.json 로드:', salary.summary?.length || 0, '명');
             }
           } catch(e) { console.warn('[HSKB] salary_2026_03.json 로드 실패:', e); }
           const salesByMonth = {};
           allSales.forEach(s => { const m = s.month||''; if(!salesByMonth[m]) salesByMonth[m]=[]; salesByMonth[m].push(s); });
-          DataService._store.salesByMonth = salesByMonth;
+          window.DataService._store.salesByMonth = salesByMonth;
           console.log('[HSKB] 매출 ' + allSales.length + '건 DataService 주입 완료');
           window.dispatchEvent(new CustomEvent('hskb:sales:loaded', { detail: { sales: allSales } }));
         }
@@ -119,7 +119,7 @@ const HSKB_DATA = {
       if (eResp.ok) {
         const expenses = await eResp.json();
         if (typeof DataService !== 'undefined') {
-          DataService._store.purchase = expenses;
+          window.DataService._store.purchase = expenses;
           console.log('[HSKB] 지출 ' + expenses.length + '건 DataService 주입 완료');
           window.dispatchEvent(new CustomEvent('hskb:expenses:loaded', { detail: { expenses } }));
         }
@@ -131,7 +131,7 @@ const HSKB_DATA = {
       if (mResp.ok) {
         const masterData = await mResp.json();
         if (typeof DataService !== 'undefined') {
-          DataService._store.master = masterData;
+          window.DataService._store.master = masterData;
         }
         // MASTER 객체 인플레이스 업데이트 (헬퍼 변수들도 갱신)
         if (typeof MASTER !== 'undefined') {
@@ -272,7 +272,7 @@ const HSKB_DATA = {
     const cust = { id:'CUST-'+newChart, chartNo:newChart, color:'#B8956A', visitHistory:[], ...data };
     r.data.push(cust);
     await this._put('customers.json', r.data, r.sha);
-    if (typeof DataService !== 'undefined') DataService._store.customers = r.data;
+    if (typeof DataService !== 'undefined') window.DataService._store.customers = r.data;
     return newChart;
   },
   async updateCustomer(chartNo, updates) {
@@ -313,10 +313,10 @@ const HSKB_DATA = {
 window.HSKB_DATA = HSKB_DATA;
 HSKB_DATA.init();
 
-// DataService.write('master', ...) 호출 시 GitHub master.json도 함께 저장
+// window.DataService.write('master', ...) 호출 시 GitHub master.json도 함께 저장
 if (typeof DataService !== 'undefined') {
-  const _origWrite = DataService.write.bind(DataService);
-  DataService.write = async function(t, d) {
+  const _origWrite = window.DataService.write.bind(DataService);
+  window.DataService.write = async function(t, d) {
     await _origWrite(t, d);
     if (t === 'master') {
       const token = localStorage.getItem('hskb_gh_token');
