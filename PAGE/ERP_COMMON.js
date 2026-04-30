@@ -108,6 +108,8 @@ const DataService = {
     this._store[t] = JSON.parse(JSON.stringify(d));
   },
 };
+window.DataService = DataService;
+
 
 
 
