@@ -274,7 +274,7 @@ body{font-family:'Instrument Sans','Noto Sans KR',sans-serif;background:var(--bg
 function CustomerList({onSelect}) {
   const [list,setList]=useState([]);const [search,setSearch]=useState('');
   useEffect(()=>{
-    const loaded=window.DataService?._store?.customers||[];
+    var ds=window.DataService;var loaded=(ds&&ds._store&&ds._store.customers)||[];
     if(loaded.length>0)setList(loaded);
     DataService.read('customers').then(d=>{if(d&&d.length>0)setList(d);});
     const handler=(e)=>setList(e.detail.customers||[]);
