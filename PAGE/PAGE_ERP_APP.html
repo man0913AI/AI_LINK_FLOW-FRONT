@@ -273,7 +273,14 @@ body{font-family:'Instrument Sans','Noto Sans KR',sans-serif;background:var(--bg
    ════════════════════════════════════════ */
 function CustomerList({onSelect}) {
   const [list,setList]=useState([]);const [search,setSearch]=useState('');
-  useEffect(()=>{DataService.read('customers').then(setList);},[]);
+  useEffect(()=>{
+    const loaded=window.DataService?._store?.customers||[];
+    if(loaded.length>0)setList(loaded);
+    DataService.read('customers').then(d=>{if(d&&d.length>0)setList(d);});
+    const handler=(e)=>setList(e.detail.customers||[]);
+    window.addEventListener('hskb:customers:loaded',handler);
+    return()=>window.removeEventListener('hskb:customers:loaded',handler);
+  },[]);
   const filtered=list.filter(c=>!search||c.name.includes(search)||c.id.includes(search)||(c.nameEn||'').toLowerCase().includes(search.toLowerCase())||c.phone.includes(search));
   return (<div className="fade-in">
     <div className="toolbar">
